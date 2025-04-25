@@ -24,6 +24,10 @@ class Place extends Model
         'map_iframe',
         'image_link',
         'status',
+        'province',       // newly added
+        'entrance_fee',   // newly added
+        'activities',     // newly added
+        'services',       // newly added
     ];
 
     // The attributes that should be hidden for arrays

@@ -12,9 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('places', function (Blueprint $table) {
-            $table->string('status');
+            $table->string('province')->nullable();               // e.g. “Agusan del Norte”
+            $table->decimal('entrance_fee', 8, 2)->default(0.00); // monetary, two decimals
+            $table->json('activities')->nullable();              // list of activities
+            $table->json('services')->nullable();                // list of services
         });
     }
+    
 
     /**
      * Reverse the migrations.
@@ -22,7 +26,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('places', function (Blueprint $table) {
-            $table->dropColumn('status');
+            //
         });
     }
 };

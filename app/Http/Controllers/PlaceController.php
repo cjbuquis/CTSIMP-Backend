@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Place;
@@ -7,179 +8,137 @@ use Illuminate\Support\Facades\Storage;
 
 class PlaceController extends Controller
 {
-    /**
-     * Display a listing of the places.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
+    // List all places
     public function index()
     {
-        // Get all places
-        $places = Place::all();
+        $places = Place::all();                                     // returns Eloquent Collection :contentReference[oaicite:5]{index=5}
         return response()->json($places);
     }
 
-
+    // List approved places for carousel
     public function carousel()
-{
-   
-    $places = Place::where('status', 'Approved')->get();
+    {
+        $places = Place::where('status', 'Approved')->get();
+        return response()->json($places);
+    }
 
-    return response()->json($places);
-}
+    // List pending places
+    public function pending()
+    {
+        $places = Place::where('status', 'Pending')->get();
+        return response()->json($places);
+    }
 
-public function pending()
-{
-   
-    $places = Place::where('status', 'Pending')->get();
-
-    return response()->json($places);
-}
-
-    /**
-     * Store a newly created place in the database.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
+    // Store a new place
     public function store(Request $request)
     {
-        // Validate the request, including status
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'place_name' => 'required|string|max:255',
-            'address' => 'required|string',
-            'email_address' => 'nullable|email',
-            'contact_no' => 'nullable|string',
-            'description' => 'nullable|string',
+        // 1. Validate including new fields
+        $validated = $request->validate([
+            'name'           => 'required|string|max:255',
+            'place_name'     => 'required|string|max:255',
+            'address'        => 'required|string',
+            'email_address'  => 'nullable|email',
+            'contact_no'     => 'nullable|string',
+            'description'    => 'nullable|string',
             'virtual_iframe' => 'nullable|string',
-            'map_iframe' => 'nullable|string',
-            'image_link' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', 
-            'status' => 'nullable|string',
+            'map_iframe'     => 'nullable|string',
+            'status'         => 'nullable|string|in:Pending,Approved,Rejected',
+            'province'       => 'nullable|string|max:255',         // new :contentReference[oaicite:6]{index=6}
+            'entrance_fee'   => 'nullable|numeric|min:0',          // new :contentReference[oaicite:7]{index=7}
+            'activities'     => 'nullable|array',                  // new :contentReference[oaicite:8]{index=8}
+            'activities.*'   => 'string',                          // each element must be string :contentReference[oaicite:9]{index=9}
+            'services'       => 'nullable|array',                  // new :contentReference[oaicite:10]{index=10}
+            'services.*'     => 'string',                          // each element must be string :contentReference[oaicite:11]{index=11}
+            'image_link'     => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-
-        $imageLink = null;
+        // 2. Handle image upload on 'public' disk
         if ($request->hasFile('image_link') && $request->file('image_link')->isValid()) {
-    
-            $imageLink = $request->file('image_link')->store('places', 'public');
+            $validated['image_link'] = $request->file('image_link')
+                                           ->store('places', 'public'); // uses public disk :contentReference[oaicite:12]{index=12}
         }
 
-   
-        $status = $request->input('status', 'active');
-
-
-        $place = Place::create(array_merge($request->all(), [
-            'image_link' => $imageLink,
-            'status' => $status,
-        ]));
+        // 3. Create via mass-assignment (fillable)
+        $place = Place::create($validated);                        // mass assignment uses $fillable :contentReference[oaicite:13]{index=13}
 
         return response()->json([
             'message' => 'Place created successfully',
-            'place' => $place
+            'place'   => $place,
         ], 201);
     }
 
-    /**
-     * Display the specified place.
-     *
-     * @param  \App\Models\Place  $place
-     * @return \Illuminate\Http\JsonResponse
-     */
+    // Show a single place
     public function show(Place $place)
     {
         return response()->json($place);
     }
 
-    /**
-
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Place  $place
-     * @return \Illuminate\Http\JsonResponse
-     */
+    // Update an existing place
     public function update(Request $request, Place $place)
     {
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'place_name' => 'required|string|max:255',
-            'address' => 'required|string',
-            'email_address' => 'nullable|email',
-            'contact_no' => 'nullable|string',
-            'description' => 'nullable|string',
+        // 1. Validate (same rules as store)
+        $validated = $request->validate([
+            'name'           => 'required|string|max:255',
+            'place_name'     => 'required|string|max:255',
+            'address'        => 'required|string',
+            'email_address'  => 'nullable|email',
+            'contact_no'     => 'nullable|string',
+            'description'    => 'nullable|string',
             'virtual_iframe' => 'nullable|string',
-            'map_iframe' => 'nullable|string',
-            'image_link' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'status' => 'nullable|string',
+            'map_iframe'     => 'nullable|string',
+            'status'         => 'nullable|string|in:Pending,Approved,Rejected',
+            'province'       => 'nullable|string|max:255',
+            'entrance_fee'   => 'nullable|numeric|min:0',
+            'activities'     => 'nullable|array',
+            'activities.*'   => 'string',
+            'services'       => 'nullable|array',
+            'services.*'     => 'string',
+            'image_link'     => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-     
+        // 2. If new image, delete old and store new
         if ($request->hasFile('image_link') && $request->file('image_link')->isValid()) {
- 
             if ($place->image_link && Storage::disk('public')->exists($place->image_link)) {
-                Storage::disk('public')->delete($place->image_link);
+                Storage::disk('public')->delete($place->image_link); // cleanup old file :contentReference[oaicite:14]{index=14}
             }
-
-         
-            $imageLink = $request->file('image_link')->store('places', 'public');
-            $place->image_link = $imageLink;
+            $validated['image_link'] = $request->file('image_link')
+                                             ->store('places', 'public');
         }
 
-
-        $place->update($request->only(['name', 'place_name', 'address', 'email_address', 'contact_no', 'description', 'virtual_iframe', 'map_iframe', 'status']));
+        // 3. Mass-update
+        $place->update($validated);                                // uses $fillable :contentReference[oaicite:15]{index=15}
 
         return response()->json([
             'message' => 'Place updated successfully',
-            'place' => $place
+            'place'   => $place,
         ]);
     }
 
-    /**
-     * Remove the specified place from the database.
-     *
-     * @param  \App\Models\Place  $place
-     * @return \Illuminate\Http\JsonResponse
-     */
+    // Delete a place
     public function destroy(Place $place)
     {
-
         if ($place->image_link && Storage::disk('public')->exists($place->image_link)) {
             Storage::disk('public')->delete($place->image_link);
         }
-
-  
         $place->delete();
+        return response()->json(['message' => 'Place deleted successfully']);
+    }
+
+    // Update only status
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string|in:Approved,Pending,Rejected',
+        ]);
+
+        $place = Place::findOrFail($id);                           // throws 404 if missing :contentReference[oaicite:16]{index=16}
+
+        $place->status = $request->input('status');
+        $place->save();
 
         return response()->json([
-            'message' => 'Place deleted successfully'
+            'message' => 'Status updated successfully',
+            'place'   => $place,
         ]);
     }
-
-    public function updateStatus(Request $request, $id)
-{
-   
-    $request->validate([
-        'status' => 'required|string|in:Approved,Pending,Rejected', 
-    ]);
-
-    
-    $place = Place::find($id);
-
- 
-    if (!$place) {
-        return response()->json([
-            'message' => 'Place not found'
-        ], 404);
-    }
-
- 
-    $place->status = $request->input('status');
-    $place->save();
-
-    return response()->json([
-        'message' => 'Status updated successfully',
-        'place' => $place
-    ]);
-}
 }
