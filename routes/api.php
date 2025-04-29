@@ -24,13 +24,18 @@ Route::post('/register', [UserController::class, 'store']);
 Route::post('/login', [UserController::class, 'login']);
 Route::post('/change-password', [UserController::class, 'changePassword']);
 
-
+Route::get('/users', [UserController::class, 'index']); // Get all users
+Route::get('/pendingusers', [UserController::class, 'pending']); // Get all pending users
+Route::get('/approvedusers', [UserController::class, 'approved']); // Get all approved users
+Route::put('/users/{user}', [UserController::class, 'update']); // Update a user
+Route::delete('/users/{user}', [UserController::class, 'destroy']); // Delete a user
+Route::put('/users/{id}/status', [UserController::class, 'updateStatus']); // Update the status of a user
 Route::get('/places', [PlaceController::class, 'index']);  // Get all places
 Route::post('/places', [PlaceController::class, 'store']); // Create a new place
-Route::get('/approvedplaces', [PlaceController::class, 'carousel']);
-Route::get('/pending', [PlaceController::class, 'pending']);
+Route::get('/approvedplaces', [PlaceController::class, 'carousel']); // Get all approved places
+Route::get('/pending', [PlaceController::class, 'pending']); // Get all pending places
 Route::get('/places/{place}', [PlaceController::class, 'show']); // Get a specific place
 Route::put('/places/{place}', [PlaceController::class, 'update']); // Update a place
 Route::delete('/places/{place}', [PlaceController::class, 'destroy']); // Delete a place
-Route::put('/places/{id}/status', [PlaceController::class, 'updateStatus']);
+Route::put('/places/{id}/status', [PlaceController::class, 'updateStatus']); // Update the status of a place
 

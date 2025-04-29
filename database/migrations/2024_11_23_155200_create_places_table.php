@@ -25,6 +25,11 @@ class CreatePlacesTable extends Migration
             $table->text('map_iframe')->nullable(); // Map iframe (e.g., for embedded maps)
             $table->string('image_link')->nullable(); // Image link for the place
             $table->timestamps(); // Created and updated timestamps
+            $table->string('entrance')->nullable(); // Entrance information (optional)
+            $table->string('room_or_cottages_price')->nullable(); // Price information (optional)   
+            $table->string('history')->nullable(); // History of the place (optional)
+            $table->string('activities')->nullable(); // Activities available at the place (optional)
+            $table->string('reason_for_rejection')->nullable(); // Reason for rejection (optional)
         });
     }
 

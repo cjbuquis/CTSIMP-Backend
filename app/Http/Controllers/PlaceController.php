@@ -56,6 +56,12 @@ public function pending()
             'map_iframe' => 'nullable|string',
             'image_link' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', 
             'status' => 'nullable|string',
+            'entrance' => 'nullable|string',
+            'room_or_cottages_price' => 'nullable|string',
+            'history' => 'nullable|string',
+            'activities' => 'nullable|string',
+            'reason_for_rejection' => 'nullable|string',
+
         ]);
 
 
@@ -112,6 +118,12 @@ public function pending()
             'map_iframe' => 'nullable|string',
             'image_link' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'status' => 'nullable|string',
+            'entrance' => 'nullable|string',
+            'room_or_cottages_price' => 'nullable|string',
+            'history' => 'nullable|string',
+            'activities' => 'nullable|string',
+            'reason_for_rejection' => 'nullable|string',
+
         ]);
 
      
@@ -127,7 +139,7 @@ public function pending()
         }
 
 
-        $place->update($request->only(['name', 'place_name', 'address', 'email_address', 'contact_no', 'description', 'virtual_iframe', 'map_iframe', 'status']));
+        $place->update($request->only(['name', 'place_name', 'address', 'email_address', 'contact_no', 'description', 'virtual_iframe', 'map_iframe', 'status', 'entrance', 'room_or_cottages_price', 'history', 'activities', 'reason_for_rejection']));
 
         return response()->json([
             'message' => 'Place updated successfully',
