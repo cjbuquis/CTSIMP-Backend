@@ -29,6 +29,7 @@ class Place extends Model
         'history',
         'activities',
         'reason_for_rejection',
+        'services',
 
     ];
 

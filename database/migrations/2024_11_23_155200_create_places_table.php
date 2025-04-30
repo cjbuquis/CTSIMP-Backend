@@ -30,6 +30,7 @@ class CreatePlacesTable extends Migration
             $table->string('history')->nullable(); // History of the place (optional)
             $table->string('activities')->nullable(); // Activities available at the place (optional)
             $table->string('reason_for_rejection')->nullable(); // Reason for rejection (optional)
+            $table->string('services')->nullable(); // Reason for rejection (optional)
         });
     }
 

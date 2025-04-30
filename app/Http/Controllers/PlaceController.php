@@ -61,6 +61,7 @@ public function pending()
             'history' => 'nullable|string',
             'activities' => 'nullable|string',
             'reason_for_rejection' => 'nullable|string',
+            'services' => 'nullable|string',
 
         ]);
 
