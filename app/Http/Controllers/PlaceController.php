@@ -12,11 +12,15 @@ class PlaceController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Get all places
-        $places = Place::all();
-        return response()->json($places);
+        $query = Place::query();
+        
+        if ($request->has('user')) {
+            $query->where('name', $request->input('user'));
+        }
+        
+        return $query->get();
     }
 
 
@@ -97,6 +101,19 @@ public function pending()
         return response()->json($place);
     }
 
+//Update place contents
+    /**
+     * Update the specified place in the database.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Place  $place
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function edit(Place $place)
+    {
+        return response()->json($place);
+    }
+    
     /**
 
      *
@@ -104,13 +121,14 @@ public function pending()
      * @param  \App\Models\Place  $place
      * @return \Illuminate\Http\JsonResponse
      */
-    public function update(Request $request, Place $place)
+
+    public function update(Request $request, Place $place) 
     {
 
         $request->validate([
-            'name' => 'required|string|max:255',
-            'place_name' => 'required|string|max:255',
-            'address' => 'required|string',
+            'name' => 'nullable|string|max:255',
+            'place_name' => 'nullable|string|max:255',
+            'address' => 'nullable|string',
             'email_address' => 'nullable|email',
             'contact_no' => 'nullable|string',
             'description' => 'nullable|string',
@@ -126,7 +144,28 @@ public function pending()
 
         ]);
 
-     
+        // Update the place with the new data
+        $place->update($request->only(['name', 'place_name', 'address', 'email_address', 'contact_no', 'description', 'virtual_iframe', 'map_iframe', 'status', 'entrance', 'room_or_cottages_price', 'history', 'activities', 'reason_for_rejection']));
+
+        return response()->json([
+            'message' => 'Place updated successfully',
+            'place' => $place
+        ]);
+
+     // Check if a new image is uploaded and is valid
+        // If a new image is uploaded, delete the old one
+        // and store the new one
+        if ($request->hasFile('image_link') && $request->file('image_link')->isValid()) {
+            // Delete the old image if it exists
+            if ($place->image_link && Storage::disk('public')->exists($place->image_link)) {
+                Storage::disk('public')->delete($place->image_link);
+            }
+
+            // Store the new image
+            $imageLink = $request->file('image_link')->store('places', 'public');
+            $place->image_link = $imageLink;
+        }
+        // If no new image is uploaded, keep the old one
         if ($request->hasFile('image_link') && $request->file('image_link')->isValid()) {
  
             if ($place->image_link && Storage::disk('public')->exists($place->image_link)) {
@@ -137,14 +176,6 @@ public function pending()
             $imageLink = $request->file('image_link')->store('places', 'public');
             $place->image_link = $imageLink;
         }
-
-
-        $place->update($request->only(['name', 'place_name', 'address', 'email_address', 'contact_no', 'description', 'virtual_iframe', 'map_iframe', 'status', 'entrance', 'room_or_cottages_price', 'history', 'activities', 'reason_for_rejection']));
-
-        return response()->json([
-            'message' => 'Place updated successfully',
-            'place' => $place
-        ]);
     }
 
     /**
