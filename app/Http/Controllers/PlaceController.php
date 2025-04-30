@@ -14,27 +14,21 @@ class PlaceController extends Controller
      */
     public function index()
     {
-        // Get all places
         $places = Place::all();
         return response()->json($places);
     }
 
-
     public function carousel()
-{
-   
-    $places = Place::where('status', 'Approved')->get();
+    {
+        $places = Place::where('status', 'Approved')->get();
+        return response()->json($places);
+    }
 
-    return response()->json($places);
-}
-
-public function pending()
-{
-   
-    $places = Place::where('status', 'Pending')->get();
-
-    return response()->json($places);
-}
+    public function pending()
+    {
+        $places = Place::where('status', 'Pending')->get();
+        return response()->json($places);
+    }
 
     /**
      * Store a newly created place in the database.
@@ -44,46 +38,40 @@ public function pending()
      */
     public function store(Request $request)
     {
-        // Validate the request, including status
         $request->validate([
-            'name' => 'required|string|max:255',
-            'place_name' => 'required|string|max:255',
-            'address' => 'required|string',
-            'email_address' => 'nullable|email',
-            'contact_no' => 'nullable|string',
-            'description' => 'nullable|string',
-            'virtual_iframe' => 'nullable|string',
-            'map_iframe' => 'nullable|string',
-            'image_link' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', 
-            'status' => 'nullable|string',
-            'entrance' => 'nullable|string',
-            'room_or_cottages_price' => 'nullable|string',
-            'history' => 'nullable|string',
-            'activities' => 'nullable|string',
-            'reason_for_rejection' => 'nullable|string',
-            'services' => 'nullable|string',
-
+            'name'                    => 'required|string|max:255',
+            'place_name'              => 'required|string|max:255',
+            'address'                 => 'required|string',
+            'email_address'           => 'nullable|email',
+            'contact_no'              => 'nullable|string',
+            'description'             => 'nullable|string',
+            'virtual_iframe'          => 'nullable|string',
+            'map_iframe'              => 'nullable|string',
+            'image_link'              => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'status'                  => 'nullable|string',
+            'entrance'                => 'nullable|string',
+            'room_or_cottages_price'  => 'nullable|string',
+            'history'                 => 'nullable|string',
+            'activities'              => 'nullable|string',
+            'reason_for_rejection'    => 'nullable|string',
+            'services'                => 'nullable|string',
         ]);
-
 
         $imageLink = null;
         if ($request->hasFile('image_link') && $request->file('image_link')->isValid()) {
-    
             $imageLink = $request->file('image_link')->store('places', 'public');
         }
 
-   
         $status = $request->input('status', 'active');
 
-
-        $place = Place::create(array_merge($request->all(), [
-            'image_link' => $imageLink,
-            'status' => $status,
-        ]));
+        $place = Place::create(array_merge(
+            $request->all(),
+            ['image_link' => $imageLink, 'status' => $status]
+        ));
 
         return response()->json([
             'message' => 'Place created successfully',
-            'place' => $place
+            'place'   => $place,
         ], 201);
     }
 
@@ -99,52 +87,48 @@ public function pending()
     }
 
     /**
-
+     * Update the specified place in the database.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Place  $place
+     * @param  \App\Models\Place        $place
      * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, Place $place)
     {
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'place_name' => 'required|string|max:255',
-            'address' => 'required|string',
-            'email_address' => 'nullable|email',
-            'contact_no' => 'nullable|string',
-            'description' => 'nullable|string',
-            'virtual_iframe' => 'nullable|string',
-            'map_iframe' => 'nullable|string',
-            'image_link' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'status' => 'nullable|string',
-            'entrance' => 'nullable|string',
+        // 1) Validate & capture only the validated inputs
+        $input = $request->validate([
+            'name'                   => 'required|string|max:255',
+            'place_name'             => 'required|string|max:255',
+            'address'                => 'required|string',
+            'email_address'          => 'nullable|email',
+            'contact_no'             => 'nullable|string',
+            'description'            => 'nullable|string',
+            'virtual_iframe'         => 'nullable|string',
+            'map_iframe'             => 'nullable|string',
+            'image_link'             => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'status'                 => 'nullable|string',
+            'entrance'               => 'nullable|string',
             'room_or_cottages_price' => 'nullable|string',
-            'history' => 'nullable|string',
-            'activities' => 'nullable|string',
-            'reason_for_rejection' => 'nullable|string',
-
+            'history'                => 'nullable|string',
+            'activities'             => 'nullable|string',
+            'reason_for_rejection'   => 'nullable|string',
+            'services'               => 'nullable|string',
         ]);
 
-     
+        // 2) Handle image upload if present
         if ($request->hasFile('image_link') && $request->file('image_link')->isValid()) {
- 
             if ($place->image_link && Storage::disk('public')->exists($place->image_link)) {
                 Storage::disk('public')->delete($place->image_link);
             }
-
-         
-            $imageLink = $request->file('image_link')->store('places', 'public');
-            $place->image_link = $imageLink;
+            $input['image_link'] = $request->file('image_link')->store('places', 'public');
         }
 
-
-        $place->update($request->only(['name', 'place_name', 'address', 'email_address', 'contact_no', 'description', 'virtual_iframe', 'map_iframe', 'status', 'entrance', 'room_or_cottages_price', 'history', 'activities', 'reason_for_rejection']));
+        // 3) Update all validated inputs at once
+        $place->update($input);
 
         return response()->json([
             'message' => 'Place updated successfully',
-            'place' => $place
+            'place'   => $place,
         ]);
     }
 
@@ -156,43 +140,41 @@ public function pending()
      */
     public function destroy(Place $place)
     {
-
         if ($place->image_link && Storage::disk('public')->exists($place->image_link)) {
             Storage::disk('public')->delete($place->image_link);
         }
 
-  
         $place->delete();
 
         return response()->json([
-            'message' => 'Place deleted successfully'
+            'message' => 'Place deleted successfully',
         ]);
     }
 
+    /**
+     * Update only the status of a place.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int                       $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function updateStatus(Request $request, $id)
-{
-   
-    $request->validate([
-        'status' => 'required|string|in:Approved,Pending,Rejected', 
-    ]);
+    {
+        $request->validate([
+            'status' => 'required|string|in:Approved,Pending,Rejected',
+        ]);
 
-    
-    $place = Place::find($id);
+        $place = Place::find($id);
+        if (! $place) {
+            return response()->json(['message' => 'Place not found'], 404);
+        }
 
- 
-    if (!$place) {
+        $place->status = $request->input('status');
+        $place->save();
+
         return response()->json([
-            'message' => 'Place not found'
-        ], 404);
+            'message' => 'Status updated successfully',
+            'place'   => $place,
+        ]);
     }
-
- 
-    $place->status = $request->input('status');
-    $place->save();
-
-    return response()->json([
-        'message' => 'Status updated successfully',
-        'place' => $place
-    ]);
-}
 }
