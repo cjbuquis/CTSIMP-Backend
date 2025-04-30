@@ -26,7 +26,6 @@ return [
     | Of course, examples of configuring each database platform that is
     | supported by Laravel is shown below to make development simple.
     |
-    |
     | All database work in Laravel is done through the PHP PDO facilities
     | so make sure you have the driver for your particular database of
     | choice installed on your machine before you begin development.
@@ -61,6 +60,23 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+
+            /*
+            |--------------------------------------------------------------------------
+            | Spatie DB Dumper Settings
+            |--------------------------------------------------------------------------
+            |
+            | If mysqldump isn't on your system PATH (e.g. Windows Laragon),
+            | you may specify its folder here (with trailing slash).
+            | Only the path to the folder – not "mysqldump.exe" itself.
+            |
+            */
+            'dump' => [
+                // absolute path to the folder containing mysqldump.exe, with trailing slash
+                'dump_binary_path'   => 'C:/laragon/bin/mysql/mysql-8.0.30-winx64/bin/',
+                'use_single_transaction' => true,   // wrap in transaction to avoid locks
+                'timeout'           => 60 * 5,      // 5 minute timeout
+            ],
         ],
 
         'pgsql' => [
