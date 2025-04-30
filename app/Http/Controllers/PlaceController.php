@@ -38,6 +38,11 @@ class PlaceController extends Controller
      */
     public function store(Request $request)
     {
+        // Ensure the user is authenticated
+        if (!auth()->check()) {
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
+
         $request->validate([
             'name'                    => 'required|string|max:255',
             'place_name'              => 'required|string|max:255',
@@ -66,7 +71,7 @@ class PlaceController extends Controller
 
         $place = Place::create(array_merge(
             $request->all(),
-            ['image_link' => $imageLink, 'status' => $status]
+            ['user_id' => auth()->id(), 'image_link' => $imageLink, 'status' => $status]
         ));
 
         return response()->json([
@@ -176,5 +181,23 @@ class PlaceController extends Controller
             'message' => 'Status updated successfully',
             'place'   => $place,
         ]);
+    }
+
+    /**
+     * Get all places submitted by a specific user.
+     *
+     * @param  int  $userId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getPlacesByUser($userId)
+    {
+        // Retrieve places where 'user_id' matches the given user ID
+        $places = Place::where('user_id', $userId)->get();
+
+        if ($places->isEmpty()) {
+            return response()->json(['message' => 'No places found for this user'], 404);
+        }
+
+        return response()->json($places);
     }
 }

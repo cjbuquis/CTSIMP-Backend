@@ -14,6 +14,7 @@ class Place extends Model
 
     // The attributes that are mass assignable
     protected $fillable = [
+        'user_id',
         'name',
         'place_name',
         'address',
@@ -22,15 +23,14 @@ class Place extends Model
         'description',
         'virtual_iframe',
         'map_iframe',
-        'image_link',
-        'status',
+        'image_link', // Ensure this is included
         'entrance',
         'room_or_cottages_price',
         'history',
         'activities',
         'reason_for_rejection',
         'services',
-
+        'status',
     ];
 
     // The attributes that should be hidden for arrays
@@ -38,4 +38,14 @@ class Place extends Model
         'created_at',
         'updated_at',
     ];
+
+    /**
+     * Get the user that owns the place.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
